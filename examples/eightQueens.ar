@@ -38,7 +38,7 @@ fn printQueens(N, x) {
             if (r = n - 1) {
                 exit 1;
             } else {
-                ansi_up n;
+                prn "";
                 placeNQueens(r + 1, n, x);
             }
         }
