@@ -1,0 +1,66 @@
+;;; Mandelbrot example ported from
+;;; https://github.com/ffwff/hana/blob/haru/examples/mandelbrot.hana
+;;; which in turn was ported from
+;;; http://warp.povusers.org/MandScripts/python.html
+;;; Note, should probably read 'not-quite-mandelbrot':
+;;; There is a bug somewhere that means it doesn't
+;;; quite look as it should do; likely in the
+;;; arrow interpretor itself.
+
+
+;;; returns the length of a container. In the context
+;;; of this program, a string of characters.
+fn char_length(chars) -> len {
+    0 -> len;
+    for i in chars { 
+        len + 1 -> len; 
+    }
+}
+
+start {
+
+    0.0 - 2.0 -> minX;
+    2.0 -> maxX;
+    20 -> width;
+    10 -> height;
+    2.0 -> aspectRatio;
+
+    ;;; The string of chars used for drawing
+    ;;; can be accessed like an array, for example,
+    ;;; chars:2 -> a; will extract the char at
+    ;;; index 2 and stick inside of a
+    " .,-:;i+hHM$*#@ " -> chars;
+    char_length(chars) - 1 -> nchars;
+
+    (maxX - minX) * (height * 1.0 / width) * aspectRatio -> yScale;
+    0 -> y;
+    while (y < height) {
+        0 -> x;
+        "" -> output;
+        while (x < width) {
+
+            minX + x * (maxX - minX) / width -> c_re;
+            y * yScale / height - yScale / 2.0 -> c_im;
+            c_re -> a;
+            c_im -> b;
+            0 -> i;
+            while(i < nchars) {
+                ;;; parsing bug here. The function
+                ;;; sqrt needs to be within a grouped
+                ;;; expression for some reason.
+                if((sqrt (a * a + b * b)) > 2.0) {
+                    break;
+                }
+                a -> a_;
+                b -> b_;
+                a_ * a_ - b_ * b_ + c_re -> a;
+                2 * a_ * b_ + c_im -> b;
+                i + 1 -> i;
+            }
+            output + chars:i -> output;
+            x + 1 -> x;
+        }
+        prn output;
+        y + 1 -> y;
+    }
+}
