@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+	<meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+	<link rel="stylesheet" data-name="vs/editor/editor.main" href="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.20.0/min/vs/editor/editor.main.min.css">
+	<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body>
+
+<div id="interpreter">
+    <div id="header">
+        <h2>Arrow Interpreter</h2>
+        <div id="run"><div id="run-icon"></div></div>
+    </div>
+        <div id="editor" class="container">
+            <div class="title"><h4>Code: </h4><select id="examples-list"></select></div>
+            <div class="editor"></div>
+        </div>
+        <div id="gutter"></div>
+        <div id="inputs" class="container">
+            <div class="title"><h4>Arguments: </h4></div>
+            <div class="editor"></div>
+        </div>
+        <div id="output" class="container">
+            <div class="title"><h4>Output: </h4></div>
+            <div class="editor"></div>
+        </div>
+</div>
+
+<script src="https://unpkg.com/split-grid/dist/split-grid.js"></script>
+<script>var require = { paths: { 'vs': 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.20.0/min/vs' } };</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.20.0/min/vs/loader.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.20.0/min/vs/editor/editor.main.nls.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.20.0/min/vs/editor/editor.main.min.js"></script>
+<script src="arrow.syntax.js"></script>
+<script src="Terminal.js"></script>
+<script src="Evented.js"></script>
+<script src="arrow.client.js"></script>
+<script src="arrow.examples.js"></script>
+
+<script>
+	const editor = monaco.editor.create(document.querySelector('#editor .editor'), {
+		value: "",
+		language: "Arrow",
+		theme: "vs-dark"
+	});
+	
+	const output = monaco.editor.create(document.querySelector('#output .editor'), {
+        value: "",
+        readOnly: true,
+        theme: "vs-dark",
+        lineNumbers: null,
+        scrollBeyondLastLine: false,
+    });
+    const terminal = new Terminal(output);
+    
+	const inputs = monaco.editor.create(document.querySelector('#inputs .editor'), {
+        value: "5",
+        language: null,
+        theme: "vs-dark",
+        lineNumbers: null,
+        scrollBeyondLastLine: false,
+    });
+    
+    inputs.onDidContentSizeChange(e => {
+        var value = inputs.getValue();
+        var new_value = value.replace("\n", " ");
+        if (value != new_value) {
+            inputs.setValue(inputs.getValue().replace("\n", " "));
+        }
+    });
+
+    const layout = () => {
+        layout._raf = layout._raf || requestAnimationFrame(() => {
+            layout._raf = null;
+            editor.layout();
+            inputs.layout();
+            output.layout();
+        });
+    };
+
+    Split({
+        columnGutters: [{
+            track: 1,
+            element: document.getElementById('gutter'),
+        }],
+        columnMinSize: 200,
+        snapOffset: 0,
+        onDrag: layout
+    });
+    window.addEventListener("resize", layout);
+
+    const examples_list = document.getElementById("examples-list");
+    examples.forEach((ex, i) => {
+        const opt = document.createElement("option");
+        opt.textContent = ex.name;
+        opt.value = i;
+        opt.toggleAttribute("selected", !!ex.selected);
+        examples_list.appendChild(opt);
+    });
+    
+    const runner = document.getElementById('run');
+    
+    function makeArrow() {
+        let arrow = new Arrow();
+        arrow.on("print", (line) => terminal.append(line));
+        arrow.on("printErr", (line) => terminal.append(line));
+        arrow.on("start", () => runner.classList.add("running"));
+        arrow.on("start", () => terminal.clear());
+        arrow.on("stop", () => runner.classList.remove("running"));
+        return arrow;
+    }
+
+    let arrow = makeArrow();
+
+    runner.addEventListener("click", () => {
+        if (arrow.running()) {
+            arrow.destroy();
+            arrow = makeArrow();
+        } else {
+            arrow.eval(editor.getValue(), inputs.getValue());
+        }
+    });
+
+    const load_example = async (i) => {
+        let { prog, args } = examples[i];
+        prog = await prog;
+        if (arrow.running()) {
+            arrow.destroy();
+            arrow = makeArrow();
+        }
+        editor.setValue(await prog);
+        requestAnimationFrame(() => editor.setScrollTop(0));
+        inputs.setValue(args);
+        terminal.clear();
+    }
+    examples_list.addEventListener("change", () => {
+        load_example(examples_list.value)
+    });
+    load_example(examples_list.value);
+</script>
+
+</body>
+</html>
