@@ -36,6 +36,7 @@ body {
 h2, h4 {
     color: #d4d4d4;
     font-family: 'Droid Sans Mono', monospace, monospace, 'Droid Sans Fallback';
+    margin: 0;
 }
 h4 {
     margin: 0;
@@ -43,7 +44,7 @@ h4 {
 #interpreter {
     display: grid;
     grid-template-columns: 1fr 10px 1fr;
-    grid-template-rows: 70px 50px 10px 1fr;
+    grid-template-rows: 57px 50px 10px 1fr 10px 14px;
     background: #171717;
     padding: 10px;
     box-sizing: border-box;
@@ -63,6 +64,24 @@ h4 {
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    align-items: center;
+}
+#footer {
+    grid-column: 1 / 4;
+    grid-row: 6 / 7;
+    color: #d4d4d4;
+    font-family: 'Droid Sans Mono', monospace, monospace, 'Droid Sans Fallback';
+    font-size: 0.8em;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+#footer a, #header a {
+    color: #d4d4d4;
+    text-decoration: none;
+}
+#footer a:hover, #header a:hover {
+    text-decoration: underline;
 }
 #editor {
     grid-column: 1 / 2;
